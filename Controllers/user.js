@@ -3,6 +3,7 @@ const Cart  = require('../Models/cartSchema');
 const Product = require('../Models/productSchema');
 const User  = require('../Models/userSchema');
 const Coupon = require('../Models/couponSchema');
+const Order = require('../Models/orderSchema');
 
 exports.create = async(req,res) =>{
     try{
@@ -84,4 +85,35 @@ exports.handleCoupon = async(req,res) =>{
     }else{
         res.status(400).send('Invalid Coupon'); 
     }
+}
+
+exports.createOrder = async(req,res) =>{
+    try{
+        const {paymentIntent} = req.body.stripeResponse;
+        const user = await User.findOne({email:req.user.email}).exec();
+        const {products} = await Cart.findOne({orderedBy:user._id}).exec();
+        await new Order({
+         products,
+         paymentIntent,
+         orderedBy:user._id
+        }).save();
+        //decrement quantity and increment sold
+        const bulkOption = products.map(item =>{
+            return {
+                updateOne:{
+                filter:{_id:item.product._id},
+                update:{$inc:{sold:+item.count,quantity:-item.count}}
+
+            }
+        }
+        })
+        let updated = await Product.bulkWrite(bulkOption,{new:true});
+        console.log(updated,'-------------------->updated');
+        res.json({ok:true});
+    }catch(error){
+        res.send({
+            err:error.message
+        })
+    }
+
 }
