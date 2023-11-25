@@ -1,5 +1,5 @@
 const express = require('express');
-const {create,update,read,remove,handleAddress,handleCoupon,createOrder} = require('../Controllers/user');
+const {create,update,read,remove,handleAddress,handleCoupon,createOrder,getOrders} = require('../Controllers/user');
 const {checkToken,adminCheck} = require('../Middleware/auth');
 // const { currentAdmin } = require('../../client/src/Components/Functions/auth');
 
@@ -10,6 +10,7 @@ route.get('/user/cart',checkToken,read);
 route.delete('/user/cart',checkToken,remove);
 route.post('/user/address',checkToken,handleAddress);
 route.post('/user/order',checkToken,createOrder);
+route.get('/user/orders',checkToken,getOrders);
 route.post('/user/cart/coupon',checkToken,handleCoupon);
 // route.put('/category/:slug',checkToken,adminCheck,update);
 // route.get('/category/:slug',read);
