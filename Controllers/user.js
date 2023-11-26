@@ -130,3 +130,26 @@ exports.getOrders = async(req,res) =>{
         console.log(error);
     }
 }
+
+exports.addWishlist = async(req,res) =>{
+// const user = await User.find({email:req.body.email}).exec();
+const response = await User.findOneAndUpdate({email:req.user.email},{$addToSet:{wishlist:req.body.id}}).exec();
+console.log(response,req.body.id,'-------------->')
+
+res.json({ok:true});
+}
+exports.getAllWishlist = async(req,res) =>{
+   const response =  await User.findOne({email:req.user.email}).select('wishlist').populate('wishlist').exec();
+   console.log(response,'checkresponse');
+   res.json(response);
+}
+exports.removeWishlist= async(req,res) =>{
+    try{
+        const {id} = req.params;
+        await User.findOneAndUpdate({email:req.user.email},{$pull:{wishlist:id}}).exec();
+        // User.findOne({email:req.user.email},{$pull:{wishlist:id}}).exec();
+        res.json({ok:true});
+    }catch(error){
+        console.log(error);
+    }
+}
