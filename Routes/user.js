@@ -10,7 +10,8 @@ const {
     getOrders,
     addWishlist,
     getAllWishlist,
-    removeWishlist
+    removeWishlist,
+    createCashOrder
     } = require('../Controllers/user');
 const {checkToken,adminCheck} = require('../Middleware/auth');
 // const { currentAdmin } = require('../../client/src/Components/Functions/auth');
@@ -22,6 +23,7 @@ route.get('/user/cart',checkToken,read);
 route.delete('/user/cart',checkToken,remove);
 route.post('/user/address',checkToken,handleAddress);
 route.post('/user/order',checkToken,createOrder);
+route.post('/user/cash-order',checkToken,createCashOrder);
 route.get('/user/orders',checkToken,getOrders);
 route.post('/user/cart/coupon',checkToken,handleCoupon);
 route.post('/user/wishlist',checkToken,addWishlist);

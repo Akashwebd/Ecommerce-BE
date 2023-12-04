@@ -4,6 +4,7 @@ const Product = require('../Models/productSchema');
 const User  = require('../Models/userSchema');
 const Coupon = require('../Models/couponSchema');
 const Order = require('../Models/orderSchema');
+const uniqueid = require("uniqueid");
 
 exports.create = async(req,res) =>{
     try{
@@ -46,7 +47,7 @@ exports.create = async(req,res) =>{
 
 exports.read = async(req,res) =>{
     const user = await User.findOne({email:req.user.email}).exec();
-    const cart = await Cart.findOne({orderedBy:user._id}).populate('products.product');
+    const cart = await Cart.findOne({orderedBy:user._id}).sort({createdAt:1}).populate('products.product');
     console.log(cart,'checkcart-------->');
     // const {products,cartTotal,totalAfterDiscount} = cart;
     res.json({details:{products:cart?.products,cartTotal:cart?.cartTotal,totalAfterDiscount:cart?.totalAfterDiscount}});
@@ -151,5 +152,47 @@ exports.removeWishlist= async(req,res) =>{
         res.json({ok:true});
     }catch(error){
         console.log(error);
+    }
+}
+
+exports.createCashOrder = async(req,res) =>{
+    const {cod} = req.body;
+    if(!cod){
+        res.status(400).send('Cash On Delivery Not Available');
+        return;
+    }else{
+        try{
+            const user = await User.findOne({email:req.user.email}).exec();
+            const cart = await Cart.findOne({orderedBy:user._id}).exec();
+            await new Order({
+             products:cart.products,
+             paymentIntent:{
+                id:uniqueid(),
+                amount:cart.totalAfterDiscount ? cart.totalAfterDiscount*100 : cart.cartTotal*100,
+                currency:"usd",
+                status:"Cash On Delivery",
+                payment_method_types:['Cash'],
+                created:Math.floor(Date.now()/1000),
+             },
+             orderedBy:user._id,
+             orderStatus:"Cash On Delivery"
+            }).save();
+            const bulkOption = cart.products.map(item =>{
+                return {
+                    updateOne:{
+                    filter:{_id:item.product._id},
+                    update:{$inc:{sold:+item.count,quantity:-item.count}}
+    
+                }
+            }
+            })
+            let updated = await Product.bulkWrite(bulkOption,{new:true});
+            console.log(updated,'-------------------->updated');
+            res.json({ok:true});
+        }catch(error){
+            res.send({
+                err:error.message
+            })
+        }
     }
 }
