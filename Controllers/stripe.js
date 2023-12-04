@@ -12,7 +12,7 @@ exports.createPaymentIntent = async(req,res) =>{
     if(couponApplied){
     finalAmount = response.totalAfterDiscount*100;
     }else{
-        finalAmount = respone.cartTotal*100
+        finalAmount = response.cartTotal*100
     }
     const paymentIntent = await stripe.paymentIntents.create({
         amount:finalAmount,
